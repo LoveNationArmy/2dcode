@@ -1,0 +1,36 @@
+<html>
+<body>
+<svg id="svg"></svg>
+<style>
+  html,body { background: #444; margin: 0; overflow: hidden; }
+  svg { background: #fff; height:100%; width: 100%;}
+  svg rect { fill: #000; width: 1; height: 1; }
+</style>
+<script>
+let c,
+    x = -1,
+    y = -1,
+    rect,
+    str = `alert('hello, there my friend. welcome to the best thing in the world! are you ready to experience reality?')`,
+    bits = str.split('').map(c=>c.charCodeAt().toString(2).padStart(8,0)).join(''),
+    sqr = Math.ceil(Math.sqrt(bits.length))
+    // map = Object.fromEntries('0123456789abcdef'.split('').map((c, i) => [c, -80 - i * 360/16]))
+    console.log(bits, sqr)
+
+    // s='';for(x=0;x<bits.length;x+=8)s+=String.fromCharCode(parseInt(bits.slice(x,x+8),2))
+    // console.log(s)
+    // console.log(str.length, bits.length)
+svg.setAttribute('viewBox', `0 0 ${sqr} ${sqr}`)
+for (c of bits) {
+  x==sqr-1 && (x=-1)
+  x==-1 && y++, x++
+  if (c==0) continue
+  rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect')
+  rect.setAttribute('x', x)
+  rect.setAttribute('y', y)
+  // rect.setAttribute('fill', `hsl(${map[c]},100%,50%)`)
+  svg.appendChild(rect)
+}
+</script>
+</body>
+</html>

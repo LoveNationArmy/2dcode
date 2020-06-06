@@ -1,0 +1,57 @@
+<html>
+<body>
+<style>
+  html,body { background: #444; margin: 0; overflow: hidden; }
+  svg { background: #000; height:100%; width: 100%;}
+  svg rect { width: 1; height: 1; }
+</style>
+<script src="./qrcode.js"></script>
+<script>
+
+let connect = channel => {
+  channel.onopen = () => console.log('channel open')
+  channel.onmessage = ({ data }) => console.log(data)
+  console.log('should connect...')
+}
+
+let ice = peer => new Promise(resolve =>
+  peer.onicegatheringstatechange = () => peer.iceGatheringState === 'complete' && resolve()
+)
+
+const main = async () => {
+  // const peer = new RTCPeerConnection()
+
+  // connect(peer.createDataChannel('data'))
+  // peer.setLocalDescription(await peer.createOffer())
+  // await ice(peer)
+  // const ld = peer.localDescription
+
+  // let o, ip, port, udp, tcp, ufrag, pwd, sha
+  // for (const line of ld.sdp.split(/\r\n/)) {
+  //   if (line.startsWith('o')) o = line.split(' ')[1]
+  //   if (line.startsWith('c=IN')) ip = line.split(' ').pop()
+  //   if (line.startsWith('m=ap')) port = line.split(' ')[1]
+  //   if (line.includes('udp')) udp = [line.split('candidate:')[1].split(' ')[0], line.split('udp ')[1].split(' ')[0]]
+  //   if (line.includes('tcp')) tcp = [line.split('candidate:')[1].split(' ')[0], line.split('tcp ')[1].split(' ')[0]]
+  //   if (line.includes('ufrag')) ufrag = line.split('ufrag:')[1]
+  //   if (line.includes('pwd')) pwd = line.split('pwd:')[1]
+  //   if (line.includes('sha-256')) sha = line.split(' ').pop()
+  // }
+
+  html = await fetch('./stencil.html').then(res => res.text())
+  html = html.replace(/\n/g,';').replace(/ /g,'%20')
+  console.log(html)
+  // const s = [o, ip, port, udp, tcp, ufrag, pwd, sha].join(' ')
+
+  QRCode.toString(`data:application/data,${html}`, { type: 'svg', errorCorrectionLevel: 'L' }, function (error, string) {
+    if (error) console.error(error)
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.innerHTML = string
+    document.body.appendChild(svg)
+  })
+}
+
+main()
+</script>
+</body>
+</html>

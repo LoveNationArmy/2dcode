@@ -1,0 +1,79 @@
+<html>
+<body>
+<script>
+let p1 = new RTCPeerConnection,
+    p2 = new RTCPeerConnection
+
+let ip4 = '192.168.43.127'
+
+let connect = channel => {
+  channel.onopen = () => console.log('channel open')
+  channel.onmessage = ({ data }) => console.log(data)
+  console.log('should connect...')
+}
+let main = async () => {
+  console.log('here')
+  connect(p1.createDataChannel('data'))
+  p1.setLocalDescription(await p1.createOffer())
+  await ice(p1)
+  let o, ip, port, udp, tcp, ufrag, pwd, sha
+  for (const line of p1.localDescription.sdp.split(/\r\n/)) {
+    if (line.startsWith('o')) o = line.split(' ')[1]
+    if (line.startsWith('c=IN')) ip = line.split(' ').pop()
+    if (line.startsWith('m=ap')) port = line.split(' ')[1]
+    if (line.includes('udp')) udp = [line.split('candidate:')[1].split(' ')[0], line.split('udp ')[1].split(' ')[0]]
+    if (line.includes('tcp')) tcp = [line.split('candidate:')[1].split(' ')[0], line.split('tcp ')[1].split(' ')[0]]
+    if (line.includes('ufrag')) ufrag = line.split('ufrag:')[1]
+    if (line.includes('pwd')) pwd = line.split('pwd:')[1]
+    if (line.includes('sha-256')) sha = line.split(' ').pop()
+  }
+console.log([o, ip, port, udp, tcp, ufrag, pwd, sha].join(' '))
+  p2.ondatachannel = ({ channel }) => connect(channel)
+  await p2.setRemoteDescription({ type: 'offer', sdp: sdp(o, ip, port, 'actpass', udp, tcp, ufrag, pwd, sha).replace(/\n/g, '\r\n') })
+  p2.setLocalDescription(await p2.createAnswer())
+  await ice(p2)
+  for (const line of p2.localDescription.sdp.split(/\r\n/)) {
+    if (line.startsWith('o')) o = line.split(' ')[1]
+    if (line.startsWith('c=IN')) ip = line.split(' ').pop()
+    if (line.startsWith('m=ap')) port = line.split(' ')[1]
+    if (line.includes('udp')) udp = [line.split('candidate:')[1].split(' ')[0], line.split('udp ')[1].split(' ')[0]]
+    if (line.includes('tcp')) tcp = [line.split('candidate:')[1].split(' ')[0], line.split('tcp ')[1].split(' ')[0]]
+    if (line.includes('ufrag')) ufrag = line.split('ufrag:')[1]
+    if (line.includes('pwd')) pwd = line.split('pwd:')[1]
+    if (line.includes('sha-256')) sha = line.split(' ').pop()
+  }
+
+  await p1.setRemoteDescription({ type: 'answer', sdp: sdp(o, ip, port, 'active', udp, tcp, ufrag, pwd, sha).replace(/\n/g, '\r\n') })
+
+  console.log('hereeee', p1, p2)
+}
+
+let sdp = (o, ip, port, setup, udp, tcp, ufrag, pwd, sha) => `v=0
+o=- ${o} 2 IN IP4 127.0.0.1
+s=-
+t=0 0
+a=group:BUNDLE 0
+a=msid-semantic: WMS
+m=application ${port} UDP/DTLS/SCTP webrtc-datachannel
+c=IN IP4 ${ip}
+a=candidate:${udp[0]} 1 udp ${udp[1]} ${ip} ${port} typ host generation 0 network-id 1 network-cost 10
+a=candidate:${tcp[0]} 1 tcp ${tcp[1]} ${ip} 9 typ host tcptype active generation 0 network-id 1 network-cost 10
+a=ice-ufrag:${ufrag}
+a=ice-pwd:${pwd}
+a=ice-options:trickle
+a=fingerprint:sha-256 ${sha}
+a=setup:${setup}
+a=mid:0
+a=sctp-port:5000
+a=max-message-size:262144
+`
+
+const ice = peer => new Promise(resolve =>
+  peer.onicegatheringstatechange = () => peer.iceGatheringState === 'complete' && resolve()
+)
+
+main()
+
+</script>
+</body>
+</html>

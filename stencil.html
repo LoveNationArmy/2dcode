@@ -1,0 +1,14 @@
+<body><video id=v autoplay style="display:none"></video><canvas id=C style="height:50%;image-rendering:pixelated;"></canvas><p style="font-size:60px;" id=r></p><script>m=0;C.width=C.height=w=60;navigator.mediaDevices.getUserMedia({video:{width:w*10,height:w*10,facingMode:'environment'}}).then(s=>{v.srcObject=s
+c=C.getContext('2d')
+c.imageSmoothingEnabled=0
+setInterval(()=>{
+// c.setTransform(1+Math.sin(m)*.7,0,0,2+Math.sin(m*.9)*.7,0,0)
+// c.setTransform(1.2+Math.sin(m*.2)*.2,0,0,1.2+Math.sin(m*.3)*.2,0,0)
+// c.drawImage(v,.05*Math.sin(m)*w/2,.05*Math.sin(m*.1)*w/2,w/2,w/2)
+c.drawImage(v,0,0,w/2,w/2)
+m+=1
+f=c.getImageData(0,0,w/2,w/2).data
+p='';t=100
+for(x=0;x<f.length;x+=4)p+=(+(f[x]<t&&f[x+1]<t&&f[x+2]<t))
+k='';for(x=0;x<p.length;x+=8)k+=String.fromCharCode(parseInt(p.slice(x,x+8),2))
+r.textContent=k;try{eval(k.replace(/\0/g, ''))}catch{}})});</script></body>
